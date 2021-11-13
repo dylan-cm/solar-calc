@@ -14,9 +14,17 @@ export type RootStackParamList = {
   Projects: undefined;
   Calculator: undefined;
   Appliances: undefined;
-  NewAppliance: undefined;
+  NewAppliance: { appliance?: Appliance };
   NotFound: undefined;
 };
 
 export type RootStackScreenProps<Screen extends keyof RootStackParamList> =
   NativeStackScreenProps<RootStackParamList, Screen>;
+
+export type Appliance = {
+  title: string;
+  w: number;
+  qty: number;
+  hr: number;
+  day: number;
+};
