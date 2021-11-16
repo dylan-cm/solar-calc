@@ -65,7 +65,7 @@ export const totalBatt = (
   Math.ceil((battStringsPara * (dcSystemV || DC_SYSTEM_V)) / (battV || BATT_V));
 /* #endregion */
 
-/* #region  3) PV Array Sizing Sheer */
+/* #region  3) PV Array Sizing Sheet */
 //** Inputs */
 export const rooftopAdderSTC = (
   stc?: number,
