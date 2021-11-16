@@ -7,21 +7,19 @@ import { StyledButton } from "../components/atoms/StyledButton";
 import { Text, View } from "../components/Themed";
 import { Appliance, RootStackParamList } from "../types";
 
-const formatPwr = (watts: number): string => {
-  return watts >= 1000
-    ? `${Math.round(watts / 100) / 10} kW`
-    : `${Math.round(watts)} W`;
-};
-
-const formatEnrg = (watts: number): string => formatPwr(watts) + "h";
-
-const calcAvgEnrg = (appl: Appliance): number =>
-  (appl.w * appl.qty * appl.hr * appl.day) / 7;
+import {
+  calcAvgDailyEnrg,
+  calcSeasonalAvgDailyEnrg,
+  sumEnrg,
+  sumPower,
+  formatPwr,
+  formatEnrg,
+} from "../constants/solarBusinessLogic";
 
 export default function CalculatorScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, "Calculator">) {
-  const testAppliancesAC = [
+  const testAppliancesAC: Appliance[] = [
     {
       title: "Toaster",
       w: 1200,
@@ -163,7 +161,7 @@ export default function CalculatorScreen({
       qty: 15,
     },
   ];
-  const testAppliancesDC = [
+  const testAppliancesDC: Appliance[] = [
     {
       title: "Door Bell",
       w: 5,
@@ -186,7 +184,7 @@ export default function CalculatorScreen({
       qty: 15,
     },
   ];
-  const testAppliancesACWinter = [
+  const testAppliancesACWinter: Appliance[] = [
     {
       title: "Heater",
       w: 750,
@@ -195,7 +193,7 @@ export default function CalculatorScreen({
       qty: 1,
     },
   ];
-  const testAppliancesACSummer = [
+  const testAppliancesACSummer: Appliance[] = [
     {
       title: "Air Conditioning",
       w: 500,
@@ -204,51 +202,40 @@ export default function CalculatorScreen({
       qty: 1,
     },
   ];
-  const [appliancesAC, setAppliancesAC] = useState(testAppliancesAC);
-  const [appliancesDC, setAppliancesDC] = useState(testAppliancesDC);
-  const [appliancesACWinter, setAppliancesACWinter] = useState(
+  const [appliancesAC, setAppliancesAC] =
+    useState<Appliance[]>(testAppliancesAC);
+  const [appliancesDC, setAppliancesDC] =
+    useState<Appliance[]>(testAppliancesDC);
+  const [appliancesACWinter, setAppliancesACWinter] = useState<Appliance[]>(
     testAppliancesACWinter
   );
-  const [appliancesACSummer, setAppliancesACSummer] = useState(
+  const [appliancesACSummer, setAppliancesACSummer] = useState<Appliance[]>(
     testAppliancesACSummer
   );
-  const [inverterEfficiency, setInverterEfficiency] = useState(0.92);
 
   const totalApplAC = {
     unique: appliancesAC.length,
     qty: appliancesAC.map((appl) => appl.qty).reduce((p, c) => p + c),
-    pwr: appliancesAC.map((appl) => appl.w * appl.qty).reduce((p, c) => p + c),
-    avgEnrg: appliancesAC
-      .map((appl) => calcAvgEnrg(appl))
-      .reduce((p, c) => p + c),
+    pwr: sumPower(appliancesAC),
+    avgEnrg: sumEnrg(appliancesAC),
   };
   const totalApplDC = {
     unique: appliancesDC.length,
     qty: appliancesDC.map((appl) => appl.qty).reduce((p, c) => p + c),
-    pwr: appliancesDC.map((appl) => appl.w * appl.qty).reduce((p, c) => p + c),
-    avgEnrg: appliancesDC
-      .map((appl) => calcAvgEnrg(appl))
-      .reduce((p, c) => p + c),
+    pwr: sumPower(appliancesDC),
+    avgEnrg: sumEnrg(appliancesDC),
   };
   const totalApplACWinter = {
     unique: appliancesACWinter.length,
     qty: appliancesACWinter.map((appl) => appl.qty).reduce((p, c) => p + c),
-    pwr: appliancesACWinter
-      .map((appl) => appl.w * appl.qty)
-      .reduce((p, c) => p + c),
-    avgEnrg: appliancesACWinter
-      .map((appl) => calcAvgEnrg(appl))
-      .reduce((p, c) => p + c),
+    pwr: sumPower(appliancesACWinter),
+    avgEnrg: sumEnrg(appliancesACWinter),
   };
   const totalApplACSummer = {
     unique: appliancesACSummer.length,
     qty: appliancesACSummer.map((appl) => appl.qty).reduce((p, c) => p + c),
-    pwr: appliancesACSummer
-      .map((appl) => appl.w * appl.qty)
-      .reduce((p, c) => p + c),
-    avgEnrg: appliancesACSummer
-      .map((appl) => calcAvgEnrg(appl))
-      .reduce((p, c) => p + c),
+    pwr: sumPower(appliancesACSummer),
+    avgEnrg: sumEnrg(appliancesACSummer),
   };
   let totals = {
     anlBasePwr: totalApplAC.pwr,
@@ -259,12 +246,16 @@ export default function CalculatorScreen({
     winBaseEnrg: totalApplACWinter.avgEnrg,
     sumBasePwr: totalApplACSummer.pwr,
     sumBaseEnrg: totalApplACSummer.avgEnrg,
-    winAvgDaily:
-      totalApplDC.avgEnrg +
-      (totalApplAC.avgEnrg + totalApplACWinter.avgEnrg) / inverterEfficiency,
-    sumAvgDaily:
-      totalApplDC.avgEnrg +
-      (totalApplAC.avgEnrg + totalApplACSummer.avgEnrg) / inverterEfficiency,
+    winAvgDaily: calcSeasonalAvgDailyEnrg(
+      totalApplDC.avgEnrg,
+      totalApplAC.avgEnrg,
+      totalApplACWinter.avgEnrg
+    ),
+    sumAvgDaily: calcSeasonalAvgDailyEnrg(
+      totalApplDC.avgEnrg,
+      totalApplAC.avgEnrg,
+      totalApplACSummer.avgEnrg
+    ),
     anlAvgDaily: 0,
     largestAvgDaily: 0,
   };
@@ -353,7 +344,7 @@ export default function CalculatorScreen({
                   {appl.title}
                 </Text>
                 <Text style={styles.topText} key={`applAvgPwr${i}`}>
-                  {formatEnrg(calcAvgEnrg(appl))}
+                  {formatEnrg(calcAvgDailyEnrg(appl))}
                 </Text>
               </View>
               <View style={styles.row} key={`applBtmRow${i}`}>
@@ -402,7 +393,7 @@ export default function CalculatorScreen({
                   {appl.title}
                 </Text>
                 <Text style={styles.topText} key={`applAvgPwr${i}`}>
-                  {formatEnrg(calcAvgEnrg(appl))}
+                  {formatEnrg(calcAvgDailyEnrg(appl))}
                 </Text>
               </View>
               <View style={styles.row} key={`applBtmRow${i}`}>
@@ -455,7 +446,7 @@ export default function CalculatorScreen({
                   {appl.title}
                 </Text>
                 <Text style={styles.topText} key={`applAvgPwr${i}`}>
-                  {formatEnrg(calcAvgEnrg(appl))}
+                  {formatEnrg(calcAvgDailyEnrg(appl))}
                 </Text>
               </View>
               <View style={styles.row} key={`applBtmRow${i}`}>
@@ -508,7 +499,7 @@ export default function CalculatorScreen({
                   {appl.title}
                 </Text>
                 <Text style={styles.topText} key={`applAvgPwr${i}`}>
-                  {formatEnrg(calcAvgEnrg(appl))}
+                  {formatEnrg(calcAvgDailyEnrg(appl))}
                 </Text>
               </View>
               <View style={styles.row} key={`applBtmRow${i}`}>

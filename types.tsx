@@ -27,4 +27,21 @@ export type Appliance = {
   qty: number;
   hr: number;
   day: number;
+  pwrFactor?: number;
+  surgeFactor?: number;
+};
+
+export type MoValues = {
+  jan: number;
+  feb: number;
+  mar: number;
+  apr: number;
+  may: number;
+  jun: number;
+  jul: number;
+  aug: number;
+  sep: number;
+  oct: number;
+  nov: number;
+  dec: number;
 };
