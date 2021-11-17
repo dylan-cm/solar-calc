@@ -1,7 +1,15 @@
+/* #region  Imports */
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as React from "react";
-import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { useRef, useState } from "react";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Animated,
+  FlatList,
+  ImageSourcePropType,
+} from "react-native";
 import { StyledButton } from "../components/atoms/StyledButton";
 
 import { Text, View } from "../components/Themed";
@@ -15,6 +23,16 @@ import {
   formatPwr,
   formatEnrg,
 } from "../constants/solarBusinessLogic";
+import FluidPaginator from "../components/atoms/FluidPaginator";
+import TwoRowSlide from "../components/atoms/TwoRowSlide";
+
+const iconPanel: ImageSourcePropType = require("../assets/images/icons8-solar-panel-100.png");
+const iconBatt: ImageSourcePropType = require("../assets/images/icons8-batteries-100.png");
+const iconAppl: ImageSourcePropType = require("../assets/images/icons8-appliances-100.png");
+const iconParallel: ImageSourcePropType = require("../assets/images/icons8-parallel-workflow-100.png");
+const iconInverterSize: ImageSourcePropType = require("../assets/images/icons8-electrical-100.png");
+const iconInverterSurge: ImageSourcePropType = require("../assets/images/icons8-lightning-bolt-100.png");
+/* #endregion */
 
 export default function CalculatorScreen({
   navigation,
@@ -258,6 +276,11 @@ export default function CalculatorScreen({
     ),
     anlAvgDaily: 0,
     largestAvgDaily: 0,
+    qty:
+      totalApplAC.qty +
+      totalApplACSummer.qty +
+      totalApplACWinter.qty +
+      totalApplDC.qty,
   };
   totals.anlAvgDaily = (totals.winAvgDaily + totals.sumAvgDaily) / 2;
   totals.largestAvgDaily = Math.max(
@@ -266,50 +289,81 @@ export default function CalculatorScreen({
     totals.sumAvgDaily
   );
 
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const slidesRef = useRef(null);
+  const viewableItemsChanged = useRef(({ viewableItems }: any) => {
+    setCurrentIndex(viewableItems[0].index);
+  }).current;
+  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 10 }).current;
+
+  const displaySlides = [
+    {
+      topRow: [
+        {
+          image: iconAppl,
+          text: [
+            `${totals.qty} Appliances`,
+            `${Math.round(totals.largestAvgDaily)} Ah/day`,
+            `${formatEnrg(25000)}/day`,
+          ],
+        },
+      ],
+      bottomRow: [
+        {
+          image: iconBatt,
+          text: [`${0} Batteries`, `${formatEnrg(25000)}`],
+        },
+        {
+          image: iconPanel,
+          text: [`${6} Panels`, `${formatPwr(1500)}`],
+        },
+      ],
+    },
+    {
+      topRow: [
+        {
+          image: iconParallel,
+          text: [`Parallel Strings: ${2} - ${3}`],
+        },
+      ],
+      bottomRow: [
+        {
+          image: iconInverterSize,
+          text: [`Inverter Size: ${2367}`],
+        },
+        {
+          image: iconInverterSurge,
+          text: [`Inverter Surge: ${4467}`],
+        },
+      ],
+    },
+  ];
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.list} stickyHeaderIndices={[1, 3, 5, 7]}>
-        <View style={styles.display}>
-          <Text>AC Loads Estimate</Text>
-          <Text>{`Total Operating Watts: ${formatPwr(
-            totals.anlBasePwr
-          )}`}</Text>
-          <Text>{`Average Daily Energy: ${formatEnrg(
-            totals.anlBaseEnrg
-          )}`}</Text>
-          <Text>DC Loads Estimate</Text>
-          <Text>{`Total Operating Watts: ${formatPwr(
-            totals.anlBasePwrDC
-          )}`}</Text>
-          <Text>{`Average Daily Energy: ${formatEnrg(
-            totals.anlBaseEnrgDC
-          )}`}</Text>
-          <Text>Additional Winter AC</Text>
-          <Text>{`Total Operating Watts: ${formatPwr(
-            totals.winBasePwr
-          )}`}</Text>
-          <Text>{`Average Daily Energy: ${formatEnrg(
-            totals.winBaseEnrg
-          )}`}</Text>
-          <Text>Additional Summer AC</Text>
-          <Text>{`Total Operating Watts: ${formatPwr(
-            totals.sumBasePwr
-          )}`}</Text>
-          <Text>{`Average Daily Energy: ${formatEnrg(
-            totals.sumBaseEnrg
-          )}`}</Text>
-          <Text>{`Winter Average Daily Energy: ${formatEnrg(
-            totals.winAvgDaily
-          )}`}</Text>
-          <Text>{`Summer Average Daily Energy: ${formatEnrg(
-            totals.sumAvgDaily
-          )}`}</Text>
-          <Text>{`Average Daily Load (Ah / day): ${formatEnrg(
-            totals.anlAvgDaily
-          )}`}</Text>
-          <Text>{`Largest Seasonal Daily Load (Ah / day): ${formatEnrg(
-            totals.largestAvgDaily
-          )}`}</Text>
+        <View style={styles.displayContainer}>
+          <FlatList
+            data={displaySlides}
+            horizontal
+            renderItem={({ item }) => (
+              <TwoRowSlide topRow={item.topRow} bottomRow={item.bottomRow} />
+            )}
+            pagingEnabled
+            bounces={false}
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(_, i) => `${i}flatListSlide`}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+              { useNativeDriver: false }
+            )}
+            onViewableItemsChanged={viewableItemsChanged}
+            scrollEventThrottle={32}
+            viewabilityConfig={viewConfig}
+            ref={slidesRef}
+          />
+          <FluidPaginator slides={displaySlides} scrollX={scrollX} />
         </View>
         <View style={[styles.listItem, styles.listHead]}>
           <View style={styles.row}>
@@ -525,10 +579,9 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#fff",
   },
-  display: {
-    width: "100%",
-    padding: 16,
+  displayContainer: {
     backgroundColor: "#f7fdff",
+    alignItems: "center",
   },
   addApplianceButton: {
     backgroundColor: "transparent",
