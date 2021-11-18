@@ -1,4 +1,4 @@
-import { Appliance, MoValues } from "../types";
+import { Appliance, MoValues } from "../types/types";
 
 /* #region  Utilities */
 export const formatPwr = (watts: number): string => {

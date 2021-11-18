@@ -5,7 +5,10 @@ import { useLayoutEffect, useState } from "react";
 import { StyleSheet, TextInput, View, Text } from "react-native";
 import { StyledButton } from "../components/atoms/StyledButton";
 import * as Haptics from "expo-haptics";
-import { Appliance, RootStackParamList } from "../types";
+import { Appliance, RootStackParamList } from "../types/types";
+
+import { db } from "../firebaseConfig";
+import { doc, setDoc } from "@firebase/firestore";
 
 const NewApplianceScreen = ({
   route,
@@ -16,11 +19,15 @@ const NewApplianceScreen = ({
     route?.params?.appliance || { title: "", w: 0, qty: 1, hr: 0, day: 0 }
   );
 
+  const onSave = () => {
+    setDoc(doc(db, "projects", "project1"), {
+      random: "blah",
+    }).then(() => navigation.goBack());
+  };
+
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <StyledButton onPress={() => navigation.goBack()} title="Save" />
-      ),
+      headerRight: () => <StyledButton onPress={onSave} title="Save" />,
     });
   }, [navigation]);
 
@@ -85,21 +92,19 @@ const NewApplianceScreen = ({
           styleText={styles.btnText}
         />
       </View>
-      {/* <View style={styles.buttonsContainer}>
-        <View style={styles.buttons}>
+      {!newAppl ? (
+        <View style={styles.buttonsContainer}>
           <StyledButton
             onPress={() => navigation.goBack()}
-            title={newAppl ? "Add" : "Save"}
-          />
-          <StyledButton
-            onPress={() => navigation.goBack()}
-            title={newAppl ? "Cancel" : "Delete"}
+            title={"Delete"}
             danger
           />
         </View>
-      </View> */}
+      ) : (
+        <></>
+      )}
     </View>
-  );
+  ); // TODO: delete confirmation modal
 };
 
 const styles = StyleSheet.create({

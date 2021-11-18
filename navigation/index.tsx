@@ -17,7 +17,7 @@ import ProjectListScreen from "../screens/ProjectListScreen";
 import CalculatorScreen from "../screens/CalculatorScreen";
 import NewApplianceScreen from "../screens/NewApplianceScreen";
 import AppliancesScreen from "../screens/AppliancesScreen";
-import { RootStackParamList } from "../types";
+import { RootStackParamList } from "../types/types";
 import LinkingConfiguration from "./LinkingConfiguration";
 
 export default function Navigation({

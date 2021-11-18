@@ -13,7 +13,7 @@ import {
 import { StyledButton } from "../components/atoms/StyledButton";
 
 import { Text, View } from "../components/Themed";
-import { Appliance, RootStackParamList } from "../types";
+import { Appliance, RootStackParamList } from "../types/types";
 
 import {
   calcAvgDailyEnrg,
@@ -37,6 +37,7 @@ const iconInverterSurge: ImageSourcePropType = require("../assets/images/icons8-
 export default function CalculatorScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, "Calculator">) {
+  /* #region  Mock data */
   const testAppliancesAC: Appliance[] = [
     {
       title: "Toaster",
@@ -220,6 +221,8 @@ export default function CalculatorScreen({
       qty: 1,
     },
   ];
+  /* #endregion */
+
   const [appliancesAC, setAppliancesAC] =
     useState<Appliance[]>(testAppliancesAC);
   const [appliancesDC, setAppliancesDC] =
@@ -231,6 +234,7 @@ export default function CalculatorScreen({
     testAppliancesACSummer
   );
 
+  /* #region  Appliance Totals */
   const totalApplAC = {
     unique: appliancesAC.length,
     qty: appliancesAC.map((appl) => appl.qty).reduce((p, c) => p + c),
@@ -288,7 +292,9 @@ export default function CalculatorScreen({
     totals.winAvgDaily,
     totals.sumAvgDaily
   );
+  /* #endregion */
 
+  /* #region  Display Pagination */
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const slidesRef = useRef(null);
@@ -296,7 +302,6 @@ export default function CalculatorScreen({
     setCurrentIndex(viewableItems[0].index);
   }).current;
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 10 }).current;
-
   const displaySlides = [
     {
       topRow: [
@@ -339,6 +344,7 @@ export default function CalculatorScreen({
       ],
     },
   ];
+  /* #endregion */
 
   return (
     <View style={styles.container}>
