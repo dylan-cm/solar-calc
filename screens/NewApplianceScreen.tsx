@@ -1,14 +1,14 @@
-import Slider from "@react-native-community/slider";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as React from "react";
 import { useLayoutEffect, useState } from "react";
 import { StyleSheet, TextInput, View, Text } from "react-native";
-import { StyledButton } from "../components/atoms/StyledButton";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import Slider from "@react-native-community/slider";
 import * as Haptics from "expo-haptics";
 import { Appliance, RootStackParamList } from "../types/types";
+import { StyledButton } from "../components/atoms/StyledButton";
 
 import { db } from "../firebaseConfig";
-import { doc, setDoc } from "@firebase/firestore";
+import { doc, updateDoc } from "@firebase/firestore";
 
 const NewApplianceScreen = ({
   route,
@@ -20,8 +20,8 @@ const NewApplianceScreen = ({
   );
 
   const onSave = () => {
-    setDoc(doc(db, "projects", "project1"), {
-      random: "blah",
+    updateDoc(doc(db, "projects", "project1"), {
+      thing: "blah",
     }).then(() => navigation.goBack());
   };
 
