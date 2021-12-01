@@ -3,12 +3,15 @@ import { useLayoutEffect, useState } from "react";
 import { StyleSheet, TextInput, View, Text } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import Slider from "@react-native-community/slider";
+import { Picker } from "@react-native-picker/picker";
 import * as Haptics from "expo-haptics";
 import { Appliance, RootStackParamList } from "../types/types";
 import { StyledButton } from "../components/atoms/StyledButton";
+import applianceWords from "../constants/appliances";
 
 import { db } from "../firebaseConfig";
-import { doc, updateDoc } from "@firebase/firestore";
+import { doc, updateDoc, arrayUnion, arrayRemove } from "@firebase/firestore";
+import TextField from "../components/atoms/TextField";
 
 const NewApplianceScreen = ({
   route,
@@ -18,11 +21,32 @@ const NewApplianceScreen = ({
   const [appl, setAppl] = useState<Appliance>(
     route?.params?.appliance || { title: "", w: 0, qty: 1, hr: 0, day: 0 }
   );
+  const [season, setSeason] = useState(route?.params?.season || "appliances");
 
   const onSave = () => {
-    updateDoc(doc(db, "projects", "project1"), {
-      thing: "blah",
-    }).then(() => navigation.goBack());
+    const savedAppl = {
+      id: "appl-id",
+      qty: appl.qty,
+      hr: appl.hr,
+      day: appl.day,
+    };
+    let updatedArray: any;
+    switch (season) {
+      case "appliances":
+        updatedArray = { appliances: arrayUnion(savedAppl) };
+        break;
+      case "winterAppliances":
+        updatedArray = { winterAppliances: arrayUnion(savedAppl) };
+        break;
+      case "summerAppliances":
+        updatedArray = { summerAppliances: arrayUnion(savedAppl) };
+        break;
+      default:
+        break;
+    }
+    updateDoc(doc(db, "projects", "project1"), updatedArray).then(() =>
+      navigation.goBack()
+    );
   };
 
   useLayoutEffect(() => {
@@ -33,14 +57,15 @@ const NewApplianceScreen = ({
 
   return (
     <View style={styles.container}>
-      <TextInput
+      <TextField
         style={styles.textInput}
-        onChangeText={(text) => setAppl({ ...appl, title: text })}
         placeholder={"Appliance Name"}
+        suggestions={applianceWords}
+        onChangeText={(text) => setAppl({ ...appl, title: text })}
         value={appl.title}
       />
       <View style={styles.wattRow}>
-        <TextInput
+        <TextField
           style={[styles.textInput, styles.wattInput]}
           onChangeText={(text) => setAppl({ ...appl, w: parseInt(text) || 0 })}
           keyboardType={"phone-pad"}
@@ -92,7 +117,17 @@ const NewApplianceScreen = ({
           styleText={styles.btnText}
         />
       </View>
-      {!newAppl ? (
+      <Picker
+        selectedValue={season}
+        onValueChange={(val) => setSeason(val)}
+        mode={"dialog"}
+        style={styles.picker}
+      >
+        <Picker.Item label="Year-round" value="appliances" />
+        <Picker.Item label="Winter" value="winterAppliances" />
+        <Picker.Item label="Summer" value="summerAppliances" />
+      </Picker>
+      {!newAppl && (
         <View style={styles.buttonsContainer}>
           <StyledButton
             onPress={() => navigation.goBack()}
@@ -100,11 +135,9 @@ const NewApplianceScreen = ({
             danger
           />
         </View>
-      ) : (
-        <></>
       )}
     </View>
-  ); // TODO: delete confirmation modal
+  );
 };
 
 const styles = StyleSheet.create({
@@ -118,12 +151,6 @@ const styles = StyleSheet.create({
   },
   textInput: {
     alignSelf: "stretch",
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "#eee",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginVertical: 24,
   },
   wattInput: {
     marginRight: 16,
@@ -167,6 +194,14 @@ const styles = StyleSheet.create({
     height: 150,
     display: "flex",
     justifyContent: "space-between",
+  },
+  picker: {
+    backgroundColor: "white",
+    width: 200,
+    height: 64,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#eee",
   },
 });
 

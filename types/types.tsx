@@ -14,7 +14,10 @@ export type RootStackParamList = {
   Projects: undefined;
   Calculator: undefined;
   Appliances: undefined;
-  NewAppliance: { appliance?: Appliance };
+  NewAppliance: {
+    appliance?: Appliance;
+    season?: "appliances" | "winterAppliances" | "summerAppliances";
+  };
   NotFound: undefined;
 };
 
