@@ -1,13 +1,18 @@
 import React from "react";
-import { Pressable, PressableProps, StyleSheet, Text } from "react-native";
+import {
+  ButtonProps,
+  Pressable,
+  PressableProps,
+  StyleSheet,
+  Text,
+} from "react-native";
 
-interface StyledButtonProps {
-  onPress?: () => any;
+interface StyledButtonProps extends ButtonProps {
   onPressIn?: () => any;
-  title?: string;
   danger?: boolean;
   disabled?: boolean;
   styleText?: {};
+  styleButton?: {};
 }
 
 export function StyledButton({
@@ -17,11 +22,12 @@ export function StyledButton({
   disabled,
   styleText,
   onPressIn,
+  ...props
 }: StyledButtonProps) {
   return (
     <Pressable
-      onPress={() => {
-        if (!disabled && onPress) onPress();
+      onPress={(e) => {
+        if (!disabled && onPress) onPress(e);
       }}
       style={({ pressed }) => [
         styles.btn,
@@ -30,6 +36,7 @@ export function StyledButton({
             ? styles.dangerPressed
             : styles.pressed
           : {},
+        props.styleButton,
       ]}
       onPressIn={() => {
         if (!disabled && onPressIn) onPressIn();

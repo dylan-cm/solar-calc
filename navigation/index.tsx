@@ -55,15 +55,10 @@ function RootNavigator() {
         options={{ title: "Solar Calculator" }}
       />
       <Stack.Screen
-        name="Appliances"
-        component={AppliancesScreen}
-        options={{ title: "Add an appliance" }}
-      />
-      <Stack.Screen
         name="NewAppliance"
         component={NewApplianceScreen}
         options={({ route }) => ({
-          title: route.params.appliance?.title || "Add new appliance",
+          title: route.params.new ? "New Appliance" : "Edit Appliance",
           headerBackTitle: "Cancel",
           headerBackTitleVisible: true,
         })}

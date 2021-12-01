@@ -383,7 +383,7 @@ export default function CalculatorScreen({
             <Text style={styles.bottomText}>{formatPwr(totalApplAC.pwr)}</Text>
           </View>
           <StyledButton
-            onPress={() => navigation.navigate("NewAppliance", {})}
+            onPress={() => navigation.navigate("NewAppliance", { new: true })}
             title="Add Appliance"
           />
         </View>
@@ -396,7 +396,10 @@ export default function CalculatorScreen({
               ]}
               key={`appl${i}`}
               onPress={() =>
-                navigation.navigate("NewAppliance", { appliance: appl })
+                navigation.navigate("NewAppliance", {
+                  appliance: appl,
+                  new: false,
+                })
               }
             >
               <View style={styles.row} key={`applTopRow${i}`}>
@@ -432,7 +435,7 @@ export default function CalculatorScreen({
             <Text style={styles.bottomText}>{formatPwr(totalApplDC.pwr)}</Text>
           </View>
           <StyledButton
-            onPress={() => navigation.navigate("NewAppliance", {})}
+            onPress={() => navigation.navigate("NewAppliance", { new: true })}
             title="Add Appliance"
           />
         </View>
@@ -445,7 +448,10 @@ export default function CalculatorScreen({
               ]}
               key={`appl${i}`}
               onPress={() =>
-                navigation.navigate("NewAppliance", { appliance: appl })
+                navigation.navigate("NewAppliance", {
+                  appliance: appl,
+                  new: false,
+                })
               }
             >
               <View style={styles.row} key={`applTopRow${i}`}>
@@ -485,7 +491,7 @@ export default function CalculatorScreen({
             </Text>
           </View>
           <StyledButton
-            onPress={() => navigation.navigate("NewAppliance", {})}
+            onPress={() => navigation.navigate("NewAppliance", { new: true })}
             title="Add Appliance"
           />
         </View>
@@ -498,7 +504,10 @@ export default function CalculatorScreen({
               ]}
               key={`appl${i}`}
               onPress={() =>
-                navigation.navigate("NewAppliance", { appliance: appl })
+                navigation.navigate("NewAppliance", {
+                  appliance: appl,
+                  new: false,
+                })
               }
             >
               <View style={styles.row} key={`applTopRow${i}`}>
@@ -538,7 +547,7 @@ export default function CalculatorScreen({
             </Text>
           </View>
           <StyledButton
-            onPress={() => navigation.navigate("NewAppliance", {})}
+            onPress={() => navigation.navigate("NewAppliance", { new: true })}
             title="Add Appliance"
           />
         </View>
@@ -551,7 +560,10 @@ export default function CalculatorScreen({
               ]}
               key={`appl${i}`}
               onPress={() =>
-                navigation.navigate("NewAppliance", { appliance: appl })
+                navigation.navigate("NewAppliance", {
+                  appliance: appl,
+                  new: false,
+                })
               }
             >
               <View style={styles.row} key={`applTopRow${i}`}>

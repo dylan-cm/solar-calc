@@ -7,10 +7,12 @@ import {
   TextInputProps,
   TouchableHighlight,
   Keyboard,
+  View,
 } from "react-native";
 
 interface AutoTextInputProps extends TextInputProps {
   suggestions?: string[];
+  unit?: string;
 }
 
 const AutoTextInput = ({ ...props }: AutoTextInputProps) => {
@@ -113,13 +115,19 @@ const AutoTextInput = ({ ...props }: AutoTextInputProps) => {
           props.onFocus?.(event);
           setFocused(true);
         }}
-        style={styles.inputBox}
-        blurOnSubmit
+        style={[styles.inputBox, { paddingRight: props.unit ? 48 : 16 }]}
         value={item || props.value}
+        blurOnSubmit
       />
-      {focused ? (
+      {!!props.unit && (
+        <View style={styles.unitWrapper}>
+          <Text style={styles.unit}>{props.unit}</Text>
+        </View>
+      )}
+      {focused &&
         suggestions.map((s, i) => (
           <TouchableHighlight
+            key={s + i + "btn"}
             onPress={(_) => {
               Keyboard.dismiss();
               setItem(s);
@@ -131,10 +139,7 @@ const AutoTextInput = ({ ...props }: AutoTextInputProps) => {
               {s}
             </Text>
           </TouchableHighlight>
-        ))
-      ) : (
-        <></>
-      )}
+        ))}
     </Animated.View>
   );
 };
@@ -147,18 +152,28 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   container: {
-    marginVertical: 24,
     shadowColor: "#000",
     backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#eee",
     borderRadius: 4,
-    zIndex: 1,
   },
   suggestion: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderTopColor: "#eee",
     borderTopWidth: 1,
+  },
+  unit: {
+    color: "#7E9195",
+  },
+  unitWrapper: {
+    position: "absolute",
+    right: 16,
+    top: 0,
+    bottom: 0,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
   },
 });

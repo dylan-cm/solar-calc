@@ -15,6 +15,7 @@ export type RootStackParamList = {
   Calculator: undefined;
   Appliances: undefined;
   NewAppliance: {
+    new: boolean;
     appliance?: Appliance;
     season?: "appliances" | "winterAppliances" | "summerAppliances";
   };
