@@ -1,6 +1,14 @@
 import * as React from "react";
 import { useLayoutEffect, useState } from "react";
-import { StyleSheet, View, Text, Platform, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Platform,
+  ScrollView,
+  SafeAreaView,
+  ImageSourcePropType,
+} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import Slider from "@react-native-community/slider";
 import { Picker } from "@react-native-picker/picker";
@@ -14,12 +22,13 @@ import { doc, updateDoc, arrayUnion } from "@firebase/firestore";
 import TextField from "../components/atoms/TextField";
 
 const ACTION_COLOR = "#39ACFF";
+const iconTrash: ImageSourcePropType = require("../assets/images/Navigation_Trash.png");
 
 const NewApplianceScreen = ({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParamList, "NewAppliance">) => {
-  const newAppl = !route.params.appliance;
+  const newAppl = route.params.new;
   const [appl, setAppl] = useState<Appliance>(
     route?.params?.appliance || { title: "", w: 0, qty: 1, hr: 0, day: 0 }
   );
@@ -51,11 +60,9 @@ const NewApplianceScreen = ({
     );
   };
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => <StyledButton onPress={onSave} title="Save" />,
-    });
-  }, [navigation]);
+  const onDelete = () => {
+    navigation.goBack();
+  };
 
   const triggerHaptic = () => {
     if (
@@ -66,125 +73,164 @@ const NewApplianceScreen = ({
     }
   };
 
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ alignItems: "center", padding: 24 }}
-      keyboardShouldPersistTaps
-    >
-      <View style={styles.inputContainer}>
-        <TextField
-          style={styles.nameInput}
-          placeholder={"Appliance Name"}
-          suggestions={applianceWords}
-          onChangeText={(text) => setAppl({ ...appl, title: text })}
-          value={appl.title}
-        />
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>How many watts does it use?</Text>
-        <TextField
-          style={styles.wattInput}
-          onChangeText={(text) => setAppl({ ...appl, w: parseInt(text) || 0 })}
-          keyboardType={"phone-pad"}
-          value={appl.w.toString()}
-          unit={"W"}
-        />
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>
-          How many hours per day do you typically use it?
-        </Text>
-        <Text style={styles.valueText}>{`${appl.hr} hours`}</Text>
-        <Slider
-          style={styles.slider}
-          minimumValue={0}
-          maximumValue={24}
-          minimumTrackTintColor={ACTION_COLOR}
-          maximumTrackTintColor="#eee"
-          thumbTintColor={ACTION_COLOR}
-          step={1}
-          value={appl.hr}
-          onValueChange={(val) => {
-            triggerHaptic();
-            setAppl({ ...appl, hr: val });
-          }}
-        />
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>
-          How many days per week do you typically use it?
-        </Text>
-        <Text style={styles.valueText}>{`${appl.day} days`}</Text>
-        <Slider
-          style={styles.slider}
-          minimumValue={0}
-          maximumValue={7}
-          minimumTrackTintColor={ACTION_COLOR}
-          maximumTrackTintColor="#eee"
-          thumbTintColor={ACTION_COLOR}
-          step={1}
-          value={appl.day}
-          onValueChange={(val) => {
-            triggerHaptic();
-            setAppl({ ...appl, day: val });
-          }}
-        />
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>How many do you use?</Text>
-        <View style={styles.row}>
+  useLayoutEffect(() => {
+    if (!route.params.new)
+      navigation.setOptions({
+        headerRight: () => (
           <StyledButton
-            title="-"
-            onPress={() => setAppl({ ...appl, qty: appl.qty - 1 })}
-            disabled={appl.qty <= 1}
-            styleText={styles.btnText}
-            styleButton={{ paddingVertical: 8 }}
-          />
-          <Text style={styles.qtyText}>{appl.qty}</Text>
-          <StyledButton
-            title="+"
-            onPress={() => setAppl({ ...appl, qty: appl.qty + 1 })}
-            styleText={styles.btnText}
-            styleButton={{ paddingVertical: 8 }}
-          />
-        </View>
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>
-          What season do you typically use this appliance?
-        </Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={season}
-            onValueChange={(val) => setSeason(val)}
-            mode={"dialog"}
-            style={styles.picker}
-          >
-            <Picker.Item label="Year-round" value="appliances" />
-            <Picker.Item label="Winter" value="winterAppliances" />
-            <Picker.Item label="Summer" value="summerAppliances" />
-          </Picker>
-        </View>
-      </View>
-      {!newAppl && (
-        <View style={styles.buttonsContainer}>
-          <StyledButton
-            onPress={() => navigation.goBack()}
-            title={"Delete"}
             danger
+            onPress={onDelete}
+            title="Delete"
+            icon={iconTrash}
+          />
+        ),
+      });
+  }, [navigation]);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={styles.scroller}
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps={"always"}
+      >
+        <View style={styles.inputContainer}>
+          <TextField
+            style={styles.nameInput}
+            placeholder={"Appliance Name"}
+            suggestions={applianceWords}
+            onChangeText={(text) => setAppl({ ...appl, title: text })}
+            value={appl.title}
           />
         </View>
-      )}
-    </ScrollView>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>How many watts does it use?</Text>
+          <TextField
+            style={styles.wattInput}
+            onChangeText={(text) =>
+              setAppl({ ...appl, w: parseInt(text) || 0 })
+            }
+            keyboardType={"phone-pad"}
+            value={appl.w.toString()}
+            unit={"W"}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>
+            How many hours per day do you typically use it?
+          </Text>
+          <Text style={styles.valueText}>{`${appl.hr} hours`}</Text>
+          <Slider
+            style={styles.slider}
+            minimumValue={0}
+            maximumValue={24}
+            minimumTrackTintColor={ACTION_COLOR}
+            maximumTrackTintColor="#eee"
+            thumbTintColor={ACTION_COLOR}
+            step={1}
+            value={appl.hr}
+            onValueChange={(val) => {
+              triggerHaptic();
+              setAppl({ ...appl, hr: val });
+            }}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>
+            How many days per week do you typically use it?
+          </Text>
+          <Text style={styles.valueText}>{`${appl.day} days`}</Text>
+          <Slider
+            style={styles.slider}
+            minimumValue={0}
+            maximumValue={7}
+            minimumTrackTintColor={ACTION_COLOR}
+            maximumTrackTintColor="#eee"
+            thumbTintColor={ACTION_COLOR}
+            step={1}
+            value={appl.day}
+            onValueChange={(val) => {
+              triggerHaptic();
+              setAppl({ ...appl, day: val });
+            }}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>How many do you use?</Text>
+          <View style={styles.row}>
+            <StyledButton
+              title="-"
+              onPress={() => setAppl({ ...appl, qty: appl.qty - 1 })}
+              disabled={appl.qty <= 1}
+              styleText={styles.btnText}
+              styleButton={{ paddingVertical: 8 }}
+            />
+            <Text style={styles.qtyText}>{appl.qty}</Text>
+            <StyledButton
+              title="+"
+              onPress={() => setAppl({ ...appl, qty: appl.qty + 1 })}
+              styleText={styles.btnText}
+              styleButton={{ paddingVertical: 8 }}
+            />
+          </View>
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>
+            What season do you typically use this appliance?
+          </Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={season}
+              onValueChange={(val) => setSeason(val)}
+              mode={"dialog"}
+              style={styles.picker}
+            >
+              <Picker.Item label="Year-round" value="appliances" />
+              <Picker.Item label="Winter" value="winterAppliances" />
+              <Picker.Item label="Summer" value="summerAppliances" />
+            </Picker>
+          </View>
+        </View>
+      </ScrollView>
+      <StyledButton
+        onPress={() => onSave()}
+        title={"Add"}
+        styleButton={styles.button}
+        styleText={styles.saveBtnText}
+      />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  button: {
+    backgroundColor: ACTION_COLOR,
+    alignSelf: "stretch",
+    margin: 24,
+  },
+  btnText: {
+    fontSize: 16,
+  },
+  saveBtnText: {
+    fontSize: 16,
+    color: "white",
+  },
+  buttonsContainer: {
+    flex: 1,
+    display: "flex",
+    justifyContent: "flex-end",
+    paddingBottom: 64,
+  },
   container: {
     height: "100%",
     backgroundColor: "#fff",
+    justifyContent: "space-between",
   },
+  scrollContainer: {
+    alignItems: "center",
+    padding: 16,
+  },
+  scroller: {},
   nameInput: {
     alignSelf: "stretch",
   },
@@ -205,19 +251,9 @@ const styles = StyleSheet.create({
   },
   label: {
     textAlign: "center",
-    fontSize: 16,
+    fontSize: 14,
     marginBottom: 10,
     maxWidth: 250,
-  },
-  btnText: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  buttonsContainer: {
-    flex: 1,
-    display: "flex",
-    justifyContent: "flex-end",
-    paddingBottom: 64,
   },
   picker: {
     backgroundColor: "white",

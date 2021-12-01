@@ -1,11 +1,15 @@
 import React from "react";
 import {
   ButtonProps,
+  ImageSourcePropType,
   Pressable,
-  PressableProps,
+  Image,
   StyleSheet,
   Text,
 } from "react-native";
+
+const DANGER_COLOR = "#d4130d";
+const ACTION_COLOR = "#39ACFF";
 
 interface StyledButtonProps extends ButtonProps {
   onPressIn?: () => any;
@@ -13,6 +17,9 @@ interface StyledButtonProps extends ButtonProps {
   disabled?: boolean;
   styleText?: {};
   styleButton?: {};
+  icon?: ImageSourcePropType;
+  btnColor?: string;
+  titleColor?: string;
 }
 
 export function StyledButton({
@@ -21,7 +28,10 @@ export function StyledButton({
   danger,
   disabled,
   styleText,
+  btnColor,
+  titleColor,
   onPressIn,
+  icon,
   ...props
 }: StyledButtonProps) {
   return (
@@ -36,17 +46,29 @@ export function StyledButton({
             ? styles.dangerPressed
             : styles.pressed
           : {},
+        !!btnColor && { backgroundColor: btnColor },
         props.styleButton,
       ]}
       onPressIn={() => {
         if (!disabled && onPressIn) onPressIn();
       }}
     >
+      {icon && (
+        <Image
+          source={icon}
+          style={[
+            styles.icon,
+            danger && { tintColor: DANGER_COLOR },
+            !!titleColor && { tintColor: titleColor },
+          ]}
+        />
+      )}
       <Text
         style={[
           styles.btnText,
-          danger ? styles.dangerText : {},
-          disabled || !onPress ? styles.disabledText : {},
+          danger && styles.dangerText,
+          (disabled || !onPress) && styles.disabledText,
+          !!titleColor && { color: titleColor },
           styleText,
         ]}
       >
@@ -58,20 +80,30 @@ export function StyledButton({
 
 const styles = StyleSheet.create({
   btnText: {
-    color: "#0077ff",
+    color: ACTION_COLOR,
     textAlign: "center",
+  },
+  icon: {
+    height: 16,
+    width: 16,
+    marginRight: 8,
+    tintColor: ACTION_COLOR,
+    resizeMode: "contain",
   },
   btn: {
     paddingVertical: 16,
     paddingHorizontal: 36,
     alignSelf: "center",
     borderRadius: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   pressed: {
     backgroundColor: "#f7fdff",
   },
   dangerText: {
-    color: "#d4130d",
+    color: DANGER_COLOR,
   },
   dangerPressed: {
     backgroundColor: "#fff7f7",
