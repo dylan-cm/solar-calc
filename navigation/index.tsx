@@ -1,8 +1,3 @@
-/**
- * If you are not familiar with React Navigation, refer to the "Fundamentals" guide:
- * https://reactnavigation.org/docs/getting-started
- *
- */
 import {
   NavigationContainer,
   DefaultTheme,
@@ -16,7 +11,6 @@ import NotFoundScreen from "../screens/NotFoundScreen";
 import ProjectListScreen from "../screens/ProjectListScreen";
 import CalculatorScreen from "../screens/CalculatorScreen";
 import NewApplianceScreen from "../screens/NewApplianceScreen";
-import AppliancesScreen from "../screens/AppliancesScreen";
 import { RootStackParamList } from "../types/types";
 import LinkingConfiguration from "./LinkingConfiguration";
 
@@ -35,10 +29,6 @@ export default function Navigation({
   );
 }
 
-/**
- * A root stack navigator is often used for displaying modals on top of all other content.
- * https://reactnavigation.org/docs/modal
- */
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function RootNavigator() {
