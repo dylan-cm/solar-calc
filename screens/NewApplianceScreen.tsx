@@ -18,7 +18,7 @@ import { StyledButton } from "../components/atoms/StyledButton";
 import applianceWords from "../constants/appliances";
 
 import { db } from "../firebaseConfig";
-import { doc, updateDoc, arrayUnion } from "@firebase/firestore";
+import { doc, updateDoc, arrayUnion, arrayRemove } from "@firebase/firestore";
 import TextField from "../components/atoms/TextField";
 
 const ACTION_COLOR = "#39ACFF";
@@ -28,40 +28,75 @@ const NewApplianceScreen = ({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParamList, "NewAppliance">) => {
-  const newAppl = route.params.new;
+  const initialAppl = route?.params?.appliance;
+  const initialSeason = route?.params?.season;
   const [appl, setAppl] = useState<Appliance>(
-    route?.params?.appliance || { title: "", w: 0, qty: 1, hr: 0, day: 0 }
+    initialAppl || {
+      title: "",
+      w: 0,
+      qty: 1,
+      hr: 0,
+      day: 0,
+    }
   );
-  const [season, setSeason] = useState(route?.params?.season || "appliances");
+  const [season, setSeason] = useState<string>(initialSeason || "anl");
 
   const onSave = () => {
-    const savedAppl = {
-      id: "appl-id",
-      qty: appl.qty,
-      hr: appl.hr,
-      day: appl.day,
-    };
+    //todo: loading indicator
+    // let prunedArray: any;
+    // if (!route?.params?.new && initialAppl)
+    //   switch (initialSeason) {
+    //     case "anl":
+    //       prunedArray = { anlAppls: arrayRemove(initialAppl) };
+    //       break;
+    //     case "win":
+    //       prunedArray = { winterAppls: arrayRemove(initialAppl) };
+    //       break;
+    //     case "sum":
+    //       prunedArray = { summerAppls: arrayRemove(initialAppl) };
+    //       break;
+    //     default:
+    //       break;
+    //   }
     let updatedArray: any;
     switch (season) {
-      case "appliances":
-        updatedArray = { appliances: arrayUnion(savedAppl) };
+      case "anl":
+        updatedArray = { anlAppls: arrayUnion(appl) };
         break;
-      case "winterAppliances":
-        updatedArray = { winterAppliances: arrayUnion(savedAppl) };
+      case "win":
+        updatedArray = { winterAppls: arrayUnion(appl) };
         break;
-      case "summerAppliances":
-        updatedArray = { summerAppliances: arrayUnion(savedAppl) };
+      case "sum":
+        updatedArray = { summerAppls: arrayUnion(appl) };
         break;
       default:
         break;
     }
+    // updateDoc(doc(db, "projects", "project1"), prunedArray).then(() => {
     updateDoc(doc(db, "projects", "project1"), updatedArray).then(() =>
       navigation.goBack()
     );
+    // });
   };
 
   const onDelete = () => {
-    navigation.goBack();
+    let prunedArray: any;
+    switch (initialSeason) {
+      case "anl":
+        prunedArray = { anlAppls: arrayRemove(initialAppl) };
+        break;
+      case "win":
+        prunedArray = { winterAppls: arrayRemove(initialAppl) };
+        break;
+      case "sum":
+        prunedArray = { summerAppls: arrayRemove(initialAppl) };
+        break;
+      default:
+        break;
+    }
+    updateDoc(doc(db, "projects", "project1"), prunedArray).then(() =>
+      navigation.goBack()
+    );
   };
 
   const triggerHaptic = () => {
@@ -185,16 +220,16 @@ const NewApplianceScreen = ({
               mode={"dialog"}
               style={styles.picker}
             >
-              <Picker.Item label="Year-round" value="appliances" />
-              <Picker.Item label="Winter" value="winterAppliances" />
-              <Picker.Item label="Summer" value="summerAppliances" />
+              <Picker.Item label="Year-round" value={"anl"} />
+              <Picker.Item label="Winter" value={"win"} />
+              <Picker.Item label="Summer" value={"sum"} />
             </Picker>
           </View>
         </View>
       </ScrollView>
       <StyledButton
         onPress={() => onSave()}
-        title={"Add"}
+        title={route.params.new ? "Add" : "Save"}
         styleButton={styles.button}
         styleText={styles.saveBtnText}
       />

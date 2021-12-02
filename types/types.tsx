@@ -1,7 +1,3 @@
-/**
- * Learn more about using TypeScript with React Navigation:
- * https://reactnavigation.org/docs/typescript/
- */
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 declare global {
@@ -17,7 +13,7 @@ export type RootStackParamList = {
   NewAppliance: {
     new: boolean;
     appliance?: Appliance;
-    season?: "appliances" | "winterAppliances" | "summerAppliances";
+    season?: "anl" | "win" | "sum";
   };
   NotFound: undefined;
 };
@@ -33,6 +29,7 @@ export type Appliance = {
   day: number;
   pwrFactor?: number;
   surgeFactor?: number;
+  pwrType?: "ac" | "dc";
 };
 
 export type MoValues = {

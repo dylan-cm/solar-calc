@@ -31,6 +31,13 @@ const AutoTextInput = ({ ...props }: AutoTextInputProps) => {
     setSuggestions(newSuggestions);
   };
 
+  const selectItem = (val: string) => {
+    props.onChangeText?.(val);
+    setItem(val);
+    Keyboard.dismiss();
+    updateSuggestions(val);
+  };
+
   /* #region Animations */
   const fadeAnim = {
     elevation: useRef(new Animated.Value(1)).current,
@@ -97,13 +104,13 @@ const AutoTextInput = ({ ...props }: AutoTextInputProps) => {
   /* #endregion */
 
   return (
-    <Animated.View style={[animViewStyle, props.style, styles.container]}>
+    <Animated.View style={[props.style, animViewStyle, styles.container]}>
       <TextInput
         {...props}
         onChangeText={(value) => {
-          props.onChangeText?.(value);
           updateSuggestions(value);
           setItem(undefined);
+          props.onChangeText?.(value);
         }}
         onBlur={(event) => {
           fadeOut();
@@ -128,11 +135,7 @@ const AutoTextInput = ({ ...props }: AutoTextInputProps) => {
         suggestions.map((s, i) => (
           <TouchableHighlight
             key={s + i + "btn"}
-            onPress={(_) => {
-              Keyboard.dismiss();
-              setItem(s);
-              updateSuggestions(s);
-            }}
+            onPress={(_) => selectItem(s)}
             underlayColor={"#f3f9fb"}
           >
             <Text key={s + i} style={styles.suggestion}>

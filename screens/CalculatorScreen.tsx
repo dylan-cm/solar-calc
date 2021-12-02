@@ -1,7 +1,7 @@
-/* #region  Imports */
+/* #region  Imports and Constants */
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as React from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -11,10 +11,8 @@ import {
   ImageSourcePropType,
 } from "react-native";
 import { StyledButton } from "../components/atoms/StyledButton";
-
 import { Text, View } from "../components/Themed";
 import { Appliance, RootStackParamList } from "../types/types";
-
 import {
   calcAvgDailyEnrg,
   calcSeasonalAvgDailyEnrg,
@@ -26,6 +24,10 @@ import {
 import FluidPaginator from "../components/atoms/FluidPaginator";
 import TwoRowSlide from "../components/atoms/TwoRowSlide";
 
+import { db } from "../firebaseConfig";
+import { doc, getDoc } from "@firebase/firestore";
+import { useIsFocused } from "@react-navigation/core";
+
 const iconPanel: ImageSourcePropType = require("../assets/images/icons8-solar-panel-100.png");
 const iconBatt: ImageSourcePropType = require("../assets/images/icons8-batteries-100.png");
 const iconAppl: ImageSourcePropType = require("../assets/images/icons8-appliances-100.png");
@@ -33,258 +35,126 @@ const iconParallel: ImageSourcePropType = require("../assets/images/icons8-paral
 const iconInverterSize: ImageSourcePropType = require("../assets/images/icons8-electrical-100.png");
 const iconInverterSurge: ImageSourcePropType = require("../assets/images/icons8-lightning-bolt-100.png");
 /* #endregion */
+interface SectionHeaderProps {
+  avgEnrg: number;
+  qty: number;
+  pwr: number;
+  title: string;
+  callback: Function;
+}
+const SectionHeader = ({
+  avgEnrg,
+  qty,
+  pwr,
+  title,
+  callback,
+}: SectionHeaderProps) => (
+  <View style={[styles.listItem, styles.listHead]}>
+    <View style={styles.row}>
+      <Text style={styles.subHeader}>{title}</Text>
+      <Text style={styles.topText}>{formatEnrg(avgEnrg)}</Text>
+    </View>
+    <View style={styles.row}>
+      <Text style={styles.bottomText}>{`${qty} items`}</Text>
+      <Text style={styles.bottomText}>{formatPwr(pwr)}</Text>
+    </View>
+    <StyledButton onPress={() => callback()} title="Add Appliance" />
+  </View>
+);
+
+interface SectionItemsProps {
+  appliances: Appliance[];
+  callback: Function;
+}
+const SectionItems = ({ appliances, callback }: SectionItemsProps) => (
+  <View>
+    {appliances.map((appl, i) => (
+      <Pressable
+        style={({ pressed }) => [
+          styles.listItem,
+          pressed ? styles.pressed : {},
+        ]}
+        key={`appl${i}`}
+        onPress={() => callback(appl)}
+      >
+        <View style={styles.row} key={`applTopRow${i}`}>
+          <Text style={styles.topText} key={`applTitle${i}`}>
+            {appl.title}
+          </Text>
+          <Text style={styles.topText} key={`applAvgPwr${i}`}>
+            {formatEnrg(calcAvgDailyEnrg(appl))}
+          </Text>
+        </View>
+        <View style={styles.row} key={`applBtmRow${i}`}>
+          <Text style={styles.bottomText} key={`applStats${i}`}>
+            {`${formatPwr(appl.w)}, x ${appl.qty}, ${appl.hr} hr, ${
+              appl.day
+            } d/wk`}
+          </Text>
+          <Text style={styles.bottomText} key={`applLoad${i}`}>
+            {formatPwr(appl.w * appl.qty)}
+          </Text>
+        </View>
+      </Pressable>
+    ))}
+  </View>
+);
 
 export default function CalculatorScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, "Calculator">) {
-  /* #region  Mock data */
-  const testAppliancesAC: Appliance[] = [
-    {
-      title: "Toaster",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "LED Bulb",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-    {
-      title: "Fridge",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "Laptop",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-    {
-      title: "HVAC",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "Lamp",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-    {
-      title: "Gizmo",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "Door Bell",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-    {
-      title: "Smart Toilet",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "Widget",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-    {
-      title: "Toaster",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "LED Bulb",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-    {
-      title: "Fridge",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "Laptop",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-    {
-      title: "HVAC",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "Lamp",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-    {
-      title: "Gizmo",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "Door Bell",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-    {
-      title: "Smart Toilet",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "Widget",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-  ];
-  const testAppliancesDC: Appliance[] = [
-    {
-      title: "Door Bell",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-    {
-      title: "Smart Toilet",
-      w: 1200,
-      hr: 2,
-      day: 5,
-      qty: 1,
-    },
-    {
-      title: "Widget",
-      w: 5,
-      hr: 10,
-      day: 7,
-      qty: 15,
-    },
-  ];
-  const testAppliancesACWinter: Appliance[] = [
-    {
-      title: "Heater",
-      w: 750,
-      hr: 10,
-      day: 7,
-      qty: 1,
-    },
-  ];
-  const testAppliancesACSummer: Appliance[] = [
-    {
-      title: "Air Conditioning",
-      w: 500,
-      hr: 10,
-      day: 7,
-      qty: 1,
-    },
-  ];
-  /* #endregion */
+  const [appliances, setAppliances] = useState<Appliance[]>([]);
+  const [appliancesWinter, setAppliancesWinter] = useState<Appliance[]>([]);
+  const [appliancesSummer, setAppliancesSummer] = useState<Appliance[]>([]);
 
-  const [appliancesAC, setAppliancesAC] =
-    useState<Appliance[]>(testAppliancesAC);
-  const [appliancesDC, setAppliancesDC] =
-    useState<Appliance[]>(testAppliancesDC);
-  const [appliancesACWinter, setAppliancesACWinter] = useState<Appliance[]>(
-    testAppliancesACWinter
-  );
-  const [appliancesACSummer, setAppliancesACSummer] = useState<Appliance[]>(
-    testAppliancesACSummer
-  );
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    const docRef = doc(db, "projects", "project1");
+    getDoc(docRef).then((docSnap) => {
+      if (docSnap.exists()) {
+        setAppliances(docSnap.data().anlAppls || []);
+        setAppliancesSummer(docSnap.data().summerAppls || []);
+        setAppliancesWinter(docSnap.data().winterAppls || []);
+      }
+    });
+    return;
+  }, [isFocused]);
 
   /* #region  Appliance Totals */
-  const totalApplAC = {
-    unique: appliancesAC.length,
-    qty: appliancesAC.map((appl) => appl.qty).reduce((p, c) => p + c),
-    pwr: sumPower(appliancesAC),
-    avgEnrg: sumEnrg(appliancesAC),
+  const calcTotals = (col: Appliance[]) => {
+    const items = col.length;
+    return {
+      unique: items,
+      qty: items > 0 ? col.map((item) => item.qty).reduce((p, c) => p + c) : 0,
+      pwr: items > 0 ? sumPower(col) : 0,
+      avgEnrg: items > 0 ? sumEnrg(col) : 0,
+    };
   };
-  const totalApplDC = {
-    unique: appliancesDC.length,
-    qty: appliancesDC.map((appl) => appl.qty).reduce((p, c) => p + c),
-    pwr: sumPower(appliancesDC),
-    avgEnrg: sumEnrg(appliancesDC),
-  };
-  const totalApplACWinter = {
-    unique: appliancesACWinter.length,
-    qty: appliancesACWinter.map((appl) => appl.qty).reduce((p, c) => p + c),
-    pwr: sumPower(appliancesACWinter),
-    avgEnrg: sumEnrg(appliancesACWinter),
-  };
-  const totalApplACSummer = {
-    unique: appliancesACSummer.length,
-    qty: appliancesACSummer.map((appl) => appl.qty).reduce((p, c) => p + c),
-    pwr: sumPower(appliancesACSummer),
-    avgEnrg: sumEnrg(appliancesACSummer),
-  };
+  const totalAppl = calcTotals(appliances);
+  const totalApplWinter = calcTotals(appliancesWinter);
+  const totalApplSummer = calcTotals(appliancesSummer);
   let totals = {
-    anlBasePwr: totalApplAC.pwr,
-    anlBaseEnrg: totalApplAC.avgEnrg,
-    anlBasePwrDC: totalApplDC.pwr,
-    anlBaseEnrgDC: totalApplDC.avgEnrg,
-    winBasePwr: totalApplACWinter.pwr,
-    winBaseEnrg: totalApplACWinter.avgEnrg,
-    sumBasePwr: totalApplACSummer.pwr,
-    sumBaseEnrg: totalApplACSummer.avgEnrg,
+    anlBasePwr: totalAppl.pwr,
+    anlBaseEnrg: totalAppl.avgEnrg,
+    anlBasePwrDC: 0, //todo: support DC
+    anlBaseEnrgDC: 0, //todo: support DC
+    winBasePwr: totalApplWinter.pwr,
+    winBaseEnrg: totalApplWinter.avgEnrg,
+    sumBasePwr: totalApplSummer.pwr,
+    sumBaseEnrg: totalApplSummer.avgEnrg,
     winAvgDaily: calcSeasonalAvgDailyEnrg(
-      totalApplDC.avgEnrg,
-      totalApplAC.avgEnrg,
-      totalApplACWinter.avgEnrg
+      totalAppl.avgEnrg,
+      totalApplWinter.avgEnrg,
+      0 //todo: support DC
     ),
     sumAvgDaily: calcSeasonalAvgDailyEnrg(
-      totalApplDC.avgEnrg,
-      totalApplAC.avgEnrg,
-      totalApplACSummer.avgEnrg
+      totalAppl.avgEnrg,
+      totalApplSummer.avgEnrg,
+      0 //todo: support DC
     ),
     anlAvgDaily: 0,
     largestAvgDaily: 0,
-    qty:
-      totalApplAC.qty +
-      totalApplACSummer.qty +
-      totalApplACWinter.qty +
-      totalApplDC.qty,
+    qty: totalAppl.qty + totalApplSummer.qty + totalApplWinter.qty + 0, //todo: support DC
   };
   totals.anlAvgDaily = (totals.winAvgDaily + totals.sumAvgDaily) / 2;
   totals.largestAvgDaily = Math.max(
@@ -348,7 +218,7 @@ export default function CalculatorScreen({
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.list} stickyHeaderIndices={[1, 3, 5, 7]}>
+      <ScrollView style={styles.list} stickyHeaderIndices={[1, 3, 5]}>
         <View style={styles.displayContainer}>
           <FlatList
             data={displaySlides}
@@ -371,222 +241,63 @@ export default function CalculatorScreen({
           />
           <FluidPaginator slides={displaySlides} scrollX={scrollX} />
         </View>
-        <View style={[styles.listItem, styles.listHead]}>
-          <View style={styles.row}>
-            <Text style={styles.subHeader}>AC Appliances</Text>
-            <Text style={styles.topText}>
-              {formatEnrg(totalApplAC.avgEnrg)}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.bottomText}>{`${totalApplAC.qty} items`}</Text>
-            <Text style={styles.bottomText}>{formatPwr(totalApplAC.pwr)}</Text>
-          </View>
-          <StyledButton
-            onPress={() => navigation.navigate("NewAppliance", { new: true })}
-            title="Add Appliance"
-          />
-        </View>
-        <View>
-          {appliancesAC.map((appl, i) => (
-            <Pressable
-              style={({ pressed }) => [
-                styles.listItem,
-                pressed ? styles.pressed : {},
-              ]}
-              key={`appl${i}`}
-              onPress={() =>
-                navigation.navigate("NewAppliance", {
-                  appliance: appl,
-                  new: false,
-                })
-              }
-            >
-              <View style={styles.row} key={`applTopRow${i}`}>
-                <Text style={styles.topText} key={`applTitle${i}`}>
-                  {appl.title}
-                </Text>
-                <Text style={styles.topText} key={`applAvgPwr${i}`}>
-                  {formatEnrg(calcAvgDailyEnrg(appl))}
-                </Text>
-              </View>
-              <View style={styles.row} key={`applBtmRow${i}`}>
-                <Text style={styles.bottomText} key={`applStats${i}`}>
-                  {`${formatPwr(appl.w)}, x ${appl.qty}, ${appl.hr} hr, ${
-                    appl.day
-                  } d/wk`}
-                </Text>
-                <Text style={styles.bottomText} key={`applLoad${i}`}>
-                  {formatPwr(appl.w * appl.qty)}
-                </Text>
-              </View>
-            </Pressable>
-          ))}
-        </View>
-        <View style={[styles.listItem, styles.listHead]}>
-          <View style={styles.row}>
-            <Text style={styles.subHeader}>DC Appliances</Text>
-            <Text style={styles.topText}>
-              {formatEnrg(totalApplDC.avgEnrg)}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.bottomText}>{`${totalApplDC.qty} items`}</Text>
-            <Text style={styles.bottomText}>{formatPwr(totalApplDC.pwr)}</Text>
-          </View>
-          <StyledButton
-            onPress={() => navigation.navigate("NewAppliance", { new: true })}
-            title="Add Appliance"
-          />
-        </View>
-        <View>
-          {appliancesDC.map((appl, i) => (
-            <Pressable
-              style={({ pressed }) => [
-                styles.listItem,
-                pressed ? styles.pressed : {},
-              ]}
-              key={`appl${i}`}
-              onPress={() =>
-                navigation.navigate("NewAppliance", {
-                  appliance: appl,
-                  new: false,
-                })
-              }
-            >
-              <View style={styles.row} key={`applTopRow${i}`}>
-                <Text style={styles.topText} key={`applTitle${i}`}>
-                  {appl.title}
-                </Text>
-                <Text style={styles.topText} key={`applAvgPwr${i}`}>
-                  {formatEnrg(calcAvgDailyEnrg(appl))}
-                </Text>
-              </View>
-              <View style={styles.row} key={`applBtmRow${i}`}>
-                <Text style={styles.bottomText} key={`applStats${i}`}>
-                  {`${formatPwr(appl.w)}, x ${appl.qty}, ${appl.hr} hr, ${
-                    appl.day
-                  } d/wk`}
-                </Text>
-                <Text style={styles.bottomText} key={`applLoad${i}`}>
-                  {formatPwr(appl.w * appl.qty)}
-                </Text>
-              </View>
-            </Pressable>
-          ))}
-        </View>
-        <View style={[styles.listItem, styles.listHead]}>
-          <View style={styles.row}>
-            <Text style={styles.subHeader}>Summer AC Appliances</Text>
-            <Text style={styles.topText}>
-              {formatEnrg(totalApplACWinter.avgEnrg)}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <Text
-              style={styles.bottomText}
-            >{`${totalApplACWinter.qty} items`}</Text>
-            <Text style={styles.bottomText}>
-              {formatPwr(totalApplACWinter.pwr)}
-            </Text>
-          </View>
-          <StyledButton
-            onPress={() => navigation.navigate("NewAppliance", { new: true })}
-            title="Add Appliance"
-          />
-        </View>
-        <View>
-          {appliancesACWinter.map((appl, i) => (
-            <Pressable
-              style={({ pressed }) => [
-                styles.listItem,
-                pressed ? styles.pressed : {},
-              ]}
-              key={`appl${i}`}
-              onPress={() =>
-                navigation.navigate("NewAppliance", {
-                  appliance: appl,
-                  new: false,
-                })
-              }
-            >
-              <View style={styles.row} key={`applTopRow${i}`}>
-                <Text style={styles.topText} key={`applTitle${i}`}>
-                  {appl.title}
-                </Text>
-                <Text style={styles.topText} key={`applAvgPwr${i}`}>
-                  {formatEnrg(calcAvgDailyEnrg(appl))}
-                </Text>
-              </View>
-              <View style={styles.row} key={`applBtmRow${i}`}>
-                <Text style={styles.bottomText} key={`applStats${i}`}>
-                  {`${formatPwr(appl.w)}, x ${appl.qty}, ${appl.hr} hr, ${
-                    appl.day
-                  } d/wk`}
-                </Text>
-                <Text style={styles.bottomText} key={`applLoad${i}`}>
-                  {formatPwr(appl.w * appl.qty)}
-                </Text>
-              </View>
-            </Pressable>
-          ))}
-        </View>
-        <View style={[styles.listItem, styles.listHead]}>
-          <View style={styles.row}>
-            <Text style={styles.subHeader}>Summer AC Appliances</Text>
-            <Text style={styles.topText}>
-              {formatEnrg(totalApplACSummer.avgEnrg)}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <Text
-              style={styles.bottomText}
-            >{`${totalApplACSummer.qty} items`}</Text>
-            <Text style={styles.bottomText}>
-              {formatPwr(totalApplACSummer.pwr)}
-            </Text>
-          </View>
-          <StyledButton
-            onPress={() => navigation.navigate("NewAppliance", { new: true })}
-            title="Add Appliance"
-          />
-        </View>
-        <View>
-          {appliancesACSummer.map((appl, i) => (
-            <Pressable
-              style={({ pressed }) => [
-                styles.listItem,
-                pressed ? styles.pressed : {},
-              ]}
-              key={`appl${i}`}
-              onPress={() =>
-                navigation.navigate("NewAppliance", {
-                  appliance: appl,
-                  new: false,
-                })
-              }
-            >
-              <View style={styles.row} key={`applTopRow${i}`}>
-                <Text style={styles.topText} key={`applTitle${i}`}>
-                  {appl.title}
-                </Text>
-                <Text style={styles.topText} key={`applAvgPwr${i}`}>
-                  {formatEnrg(calcAvgDailyEnrg(appl))}
-                </Text>
-              </View>
-              <View style={styles.row} key={`applBtmRow${i}`}>
-                <Text style={styles.bottomText} key={`applStats${i}`}>
-                  {`${formatPwr(appl.w)}, x ${appl.qty}, ${appl.hr} hr, ${
-                    appl.day
-                  } d/wk`}
-                </Text>
-                <Text style={styles.bottomText} key={`applLoad${i}`}>
-                  {formatPwr(appl.w * appl.qty)}
-                </Text>
-              </View>
-            </Pressable>
-          ))}
-        </View>
+        {/* Year-Round */}
+        <SectionHeader
+          avgEnrg={totalAppl.avgEnrg}
+          qty={totalAppl.qty}
+          pwr={totalAppl.pwr}
+          title={"Year-Round Appliances"}
+          callback={() => navigation.navigate("NewAppliance", { new: true })}
+        />
+        <SectionItems
+          appliances={appliances}
+          callback={(appl: Appliance) =>
+            navigation.navigate("NewAppliance", {
+              appliance: appl,
+              new: false,
+            })
+          }
+        />
+        {/* Winter */}
+        <SectionHeader
+          avgEnrg={totalApplWinter.avgEnrg}
+          qty={totalApplWinter.qty}
+          pwr={totalApplWinter.pwr}
+          title={"Winter Appliances"}
+          callback={() =>
+            navigation.navigate("NewAppliance", { new: true, season: "win" })
+          }
+        />
+        <SectionItems
+          appliances={appliancesWinter}
+          callback={(appl: Appliance) =>
+            navigation.navigate("NewAppliance", {
+              appliance: appl,
+              new: false,
+              season: "win",
+            })
+          }
+        />
+        {/* Summer */}
+        <SectionHeader
+          avgEnrg={totalApplSummer.avgEnrg}
+          qty={totalApplSummer.qty}
+          pwr={totalApplSummer.pwr}
+          title={"Summer Appliances"}
+          callback={() =>
+            navigation.navigate("NewAppliance", { new: true, season: "sum" })
+          }
+        />
+        <SectionItems
+          appliances={appliancesSummer}
+          callback={(appl: Appliance) =>
+            navigation.navigate("NewAppliance", {
+              appliance: appl,
+              new: false,
+              season: "sum",
+            })
+          }
+        />
       </ScrollView>
     </View>
   );
