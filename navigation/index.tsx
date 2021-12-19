@@ -42,7 +42,7 @@ function RootNavigator() {
       <Stack.Screen
         name="Calculator"
         component={CalculatorScreen}
-        options={{ title: "Solar Calculator" }}
+        options={{ title: "Solar Calculator", headerShown: false }}
       />
       <Stack.Screen
         name="NewAppliance"

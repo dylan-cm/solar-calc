@@ -2371,6 +2371,11 @@ acorn@^8.2.4:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.5.0.tgz#4512ccb99b3698c752591e9bb4472e38ad43cee2"
   integrity sha512-yXbYeFy+jUuYd3/CDcg2NkIYE991XYX/bje7LmjJigUciaeO1JR4XxXgCIV1/Zc/dRuFEyw1L0pbA+qynJkW5Q==
 
+add@^2.0.6:
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/add/-/add-2.0.6.tgz#248f0a9f6e5a528ef2295dbeec30532130ae2235"
+  integrity sha1-JI8Kn25aUo7yKV2+7DBTITCuIjU=
+
 agent-base@6:
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/agent-base/-/agent-base-6.0.2.tgz#49fff58577cfee3f37176feab4c22e00f86d7f77"
@@ -6656,6 +6661,11 @@ react-native-dotenv@^3.3.0:
   dependencies:
     dotenv "^10.0.0"
 
+react-native-nested-scroll-view@^9.0.0:
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/react-native-nested-scroll-view/-/react-native-nested-scroll-view-9.0.0.tgz#c9afd2678be84f1707186abb510543b56f94f9ef"
+  integrity sha512-I7c/so7RaLbeZaJKAcZPYqyN8LTA9K5PtyUE7p17lXIs4/KLEkzej8YOa5KzDxSiX7RWKPmqlfxgcqkx50hX/Q==
+
 react-native-safe-area-context@3.3.2:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-3.3.2.tgz#9549a2ce580f2374edb05e49d661258d1b8bcaed"
@@ -6667,6 +6677,13 @@ react-native-screens@~3.8.0:
   integrity sha512-lHrnB/elAoMJKv8O12U6BLgeup4lB6ZKJHEOVuG/D72nv/OE9wUusbou6YCB5tp3YbaSpHflPnkFmHA/vCejpw==
   dependencies:
     warn-once "^0.1.0"
+
+react-native-sticky-parallax-header@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/react-native-sticky-parallax-header/-/react-native-sticky-parallax-header-0.4.1.tgz#c7c75544ab07e614dae4e437a370350d3527c480"
+  integrity sha512-0uUdMScV42o0uOV0krKXK3juG/ckjOA8kOrQxbcl1q6jit64hPjGBmdo2F2qwFDc3ukQKxeYOXYXsVZGoY/WSg==
+  dependencies:
+    prop-types "^15.7.2"
 
 react-native-web@0.17.1:
   version "0.17.1"

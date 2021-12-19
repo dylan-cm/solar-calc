@@ -232,6 +232,7 @@ const NewApplianceScreen = ({
         title={route.params.new ? "Add" : "Save"}
         styleButton={styles.button}
         styleText={styles.saveBtnText}
+        btnColor={ACTION_COLOR}
       />
     </SafeAreaView>
   );
